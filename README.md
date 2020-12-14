@@ -57,7 +57,7 @@ There are a few mandatory classes you'll need for a plugin so we need to make th
 
 ### Make a new class called PluginConfiguration
 
-You can call it watever you'd like readlly. This class is used to hold settings your plugin might need. We can leave it empty for now. This class should inherit from `MediaBrowser.Model.Plugins.BasePluginConfiguration`
+You can call it whatever you'd like. This class is used to hold settings your plugin might need. We can leave it empty for now. This class should inherit from `MediaBrowser.Model.Plugins.BasePluginConfiguration`
 
 ### Make a new class called Plugin
 
