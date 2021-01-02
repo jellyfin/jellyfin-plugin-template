@@ -16,7 +16,7 @@ document creation date: 01/01/2021
 	- Create a GUID
 	- Update strings in the code (plugin Name & GUID)
 	- Compile the solution
-	- Copy the dll to the jellyfin plugins folder & start the jellyfin server
+	- Copy the dll into a new folder in  the jellyfin plugins folder & start the jellyfin server
 	- Check your Template Plugin installed  
 	
   
