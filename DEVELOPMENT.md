@@ -133,7 +133,7 @@ document creation date: 01/01/2021
 4. Click the 'Dashboard' submenu button  
 5. scroll down and click the 'Plugins' submenu button  
 6. make sure you see your 'Template' plugin as a tile  
-7. if any problem occurr and you can't see you'r Template plugin then goto: `%UserProfile%\AppData\Local\jellyfin\log` and open the latest log file and try to search for the plugin file name and see if there is an error or exception (then google it)  
+7. if any problem occurr and you can't see your Template plugin then goto: `%UserProfile%\AppData\Local\jellyfin\log` and open the latest log file and try to search for the plugin file name and see if there is an error or exception (then google it)  
   
 after this goto: https://github.com/jellyfin/jellyfin-plugin-template
 to learn more about JellyFin Plugins and how to implement content and functionality into them,
