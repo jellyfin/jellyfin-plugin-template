@@ -35,8 +35,8 @@
                 });
             }
 
-            // Listen for the event.
-            document.addEventListener('finishedRendering', function (e) { showConfig(); }, false);
+            // Listen for the event, once triggered - remove the listener and show the config
+            document.addEventListener('finishedRendering', function (e) { document.removeEventListener('finishedRendering', arguments.callee); showConfig(); }, false);
         </script>
 
         <div data-role="content">
