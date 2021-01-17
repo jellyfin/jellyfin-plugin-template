@@ -111,19 +111,20 @@ document creation date: 01/01/2021
 1. stop the server by killing the executable window of: `C:\Program Files\Jellyfin\Server\Jellyfin.exe`  
 2. goto plugins folder (in windows: `%UserProfile%\AppData\Local\jellyfin\plugins`)  
 3. create a folder with the plugin name (for instance Template), (in windows you should no have a folder: : `%UserProfile%\AppData\Local\jellyfin\plugins\Template`) lets call it `[TEMPLATE_PLUGIN_ROOT_FOLDER]`  
-4. copy your compiled dll plugin file to this folder  
-5. you'r dll compiled file will reside in you'r 'Template' project folder under: `[TEMPLATE_PLUGIN_PROJECT_ROOT_FOLDER]\Jellyfin.Plugin.Template\bin\Debug\net5.0` (or the current dotnet framework version JellyFin rely on)  
+4. copy your compiled dll plugin file into its own folder within this folder. eg. [TEMPLATE_PLUGIN_ROOT_FOLDER]\MyPlugin_1.0.0.0\
+5. your dll compiled file will reside in your 'Template' project folder under: `[TEMPLATE_PLUGIN_PROJECT_ROOT_FOLDER]\Jellyfin.Plugin.Template\bin\Debug\net5.0` (or the current dotnet framework version JellyFin rely on)
 6. the dll file should be called: Jellyfin.Plugin.Template.dll  
 7. if you would like to debug the plugin in the future then also copy the file: Jellyfin.Plugin.Template.pdb  
 8. start the server again by executing the file: `C:\Program Files\Jellyfin\Server\Jellyfin.exe`  
-9. once the server started, a 'meta.json' file is created in the new Template plugin folder (next to the dll file in the [TEMPLATE_PLUGIN_ROOT_FOLDER] folder)  
+9. once the server started, a 'meta.json' file is created in the new Template plugin folder (next to the dll file in the [TEMPLATE_PLUGIN_ROOT_FOLDER]\MyPlugin_1.0.0.0 folder)
+
+## Stages 10 - 15 are required for 17.0RC1 & 17.0RC2 ONLY
 10. stop the server  
-11. edit the 'meta.json' file with a text editor  
-12. find the line: "guid": "...",  
+11. edit the 'meta.json' file with a text editor
+12. find the line: "guid": "...",
 13. replace the GUID string with your created GUID  
 14. save the file  
 15. start the server again  
-  
   
 ## Check your Template Plugin installed
   
@@ -132,8 +133,8 @@ document creation date: 01/01/2021
 3. once logged in, click the 3-line menu button from the top left corner (sometimes reffered to as 'Hamburger')  
 4. Click the 'Dashboard' submenu button  
 5. scroll down and click the 'Plugins' submenu button  
-6. make sure you see your 'Template' plugin as a tile  
-7. if any problem occurr and you can't see your Template plugin then goto: `%UserProfile%\AppData\Local\jellyfin\log` and open the latest log file and try to search for the plugin file name and see if there is an error or exception (then google it)  
+6. make sure you see your 'Template' plugin as a tile and it has "status:active" underneath the names.
+7. if any problems occurr, if it says "status:incompatible", or you can't see your Template plugin then goto: `%UserProfile%\AppData\Local\jellyfin\log` and open the latest log file and try to search for the plugin file name and see if there is an error or exception (then google it)  
   
 after this goto: https://github.com/jellyfin/jellyfin-plugin-template
 to learn more about JellyFin Plugins and how to implement content and functionality into them,
