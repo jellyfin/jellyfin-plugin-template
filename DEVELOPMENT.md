@@ -5,7 +5,7 @@ document creation date: 01/01/2021
   
 ## Intro
   
-1. Jellyfin is a Plex OpenSource equivalent, to read more about it goto: https://jellyfin.org  
+1. Jellyfin is an open source media server, to read more about it, go to: https://jellyfin.org  
 2. Jellyfin has plugin infrastructure to expand and enhance it's capabilities, plugin are written in C# and Html  
 3. A good staring point for Jellyfin Plugin Development is the 'Template' project found at: https://github.com/jellyfin/jellyfin-plugin-template  
 4. the template project needs more info for beginners, this readme file is a step by step guide to build and install 'Template' plugin project  
