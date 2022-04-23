@@ -185,19 +185,52 @@ The only thing left to do is to compile the project as it is specified a few lin
 
 Visual Studio Code allows developers to automate the process of starting all necessary dependencies to start debugging the plugin. This guide assumes the reader is familiar with the [documentation on debugging in Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging) and has read the documentation in this file. It is assumed that the Jellyfin Server has already been compiled once. However, should one desire to automatically compile the server before the start of the debugging session, this can be easily implemented, but is not further discussed here.
 
-1. To automate the process, create a new `launch.json` file for C# projects inside the `.vscode` folder. The example below shows only the relevant parts of the file. Adjustments to your specific setup and operating system may be required.
+A full example, which aims to be portable may be found in this repo's `.vscode` folder.
+
+This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugin-template` under the same parent directory, though you can customize this in `settings.json`
+
+1. Create a `settings.json` file inside your `.vscode` folder, to specify common options specific to your local setup.
+   ```json
+    {
+        // jellyfinDir : The directory of the cloned jellyfin server project
+        // This needs to be built once before it can be used
+        "jellyfinDir"     : "${workspaceFolder}/../jellyfin/Jellyfin.Server",
+        // jellyfinWebDir : The directory of the cloned jellyfin-web project
+        // This needs to be built once before it can be used
+        "jellyfinWebDir"  : "${workspaceFolder}/../jellyfin-web",
+        // jellyfinDataDir : the root data directory for a running jellyfin instance
+        // This is where jellyfin stores its configs, plugins, metadata etc
+        // This is platform specific by default, but on Windows defaults to
+        // ${env:LOCALAPPDATA}/jellyfin
+        "jellyfinDataDir" : "${env:LOCALAPPDATA}/jellyfin",
+        // The name of the plugin
+        "pluginName" : "Jellyfin.Plugin.Template",
+    }
+   ```
+
+1. To automate the launch process, create a new `launch.json` file for C# projects inside the `.vscode` folder. The example below shows only the relevant parts of the file. Adjustments to your specific setup and operating system may be required.
 
    ```json
-   // part of "configurations" in the launch.json file
-   "request": "launch",
-   "preLaunchTask": "build-and-copy",
-   "program": "${workspaceFolder}/<path to jellyfin>/bin/Debug/net6.0/jellyfin.dll",
-   "args": [
-      //"--nowebclient"
-      "--webdir",
-      "<path to jellyfin-web>/dist/"
-   ],
-   "cwd": "${workspaceFolder}/<path to jellyfin>",
+    {
+        // Paths and plugin names are configured in settings.json
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "type": "coreclr",
+                "name": "Launch",
+                "request": "launch",
+                "preLaunchTask": "build-and-copy",
+                "program": "${config:jellyfinDir}/bin/Debug/net6.0/jellyfin.dll",
+                "args": [
+                //"--nowebclient"
+                "--webdir",
+                "${config:jellyfinWebDir}/dist/"
+                ],
+                "cwd": "${config:jellyfinDir}",
+            }
+        ]
+    }
+
    ```
 
    The `request` type is specified as `launch`, as this `launch.json` file will start the Jellyfin Server process. The `preLaunchTask` defines a task that will run before the Jellyfin Server starts. More on this later. It is important to set the `program` path to the Jellyin Server program and set the current working directory (`cwd`) to the working directory of the Jellyfin Server.
@@ -205,59 +238,129 @@ Visual Studio Code allows developers to automate the process of starting all nec
 
 2. Create a `tasks.json` file inside your `.vscode` folder and specify a `build-and-copy` task that will run in `sequence` order. This tasks depends on multiple other tasks and all of those other tasks can be defined as simple `shell` tasks that run commands like the `cp` command to copy a file. The sequence to run those tasks in is given below. Please note that it might be necessary to adjust the examples for your specific setup and operating system.
 
-   ```json
-   "label": "build-and-copy",
-   "dependsOrder": "sequence",
-   "dependsOn": [
-         "build",
-         "make-plugin-dir",
-         "copy-dll",
-   ],
-   ```
+   The full file is shown here - Specific sections will be discussed in depth
+    ```json
+    {
+        // Paths and plugin name are configured in settings.json
+        "version": "2.0.0",
+        "tasks": [
+            {
+            // A chain task - build the plugin, then copy it to your
+            // jellyfin server's plugin directory
+            "label": "build-and-copy",
+            "dependsOrder": "sequence",
+            "dependsOn": ["build", "make-plugin-dir", "copy-dll"]
+            },
+            {
+            // Build the plugin
+            "label": "build",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "publish",
+                "${workspaceFolder}/${config:pluginName}.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+            },
+            {
+                // Ensure the plugin directory exists before trying to use it
+                "label": "make-plugin-dir",
+                "type": "shell",
+                "command": "mkdir",
+                "args": [
+                "-Force",
+                "-Path",
+                "${config:jellyfinDataDir}/plugins/${config:pluginName}/"
+                ]
+            },
+            {
+                // Copy the plugin dll to the jellyfin plugin install path
+                // This command copies every .dll from the build directory to the plugin dir
+                // Usually, you probablly only need ${config:pluginName}.dll
+                // But some plugins may bundle extra requirements
+                "label": "copy-dll",
+                "type": "shell",
+                "command": "cp",
+                "args": [
+                "./${config:pluginName}/bin/Debug/net6.0/publish/*",
+                "${config:jellyfinDataDir}/plugins/${config:pluginName}/"
+                ]
 
-   1. A build task. This task builds the plugin without generating a summary, but with full paths for file names enabled.
+            },
+        ]
+    }
 
-      ```json
-      "label": "build",
-      "command": "dotnet",
-      "type": "shell",
-      "args": [
-         "build",
-         "${workspaceFolder}/YourPlugin.sln",
-         "/property:GenerateFullPaths=true",
-         "/consoleloggerparameters:NoSummary"
-      ],
-      "group": "build",
-      "presentation": {
-         "reveal": "silent"
-      },
-      "problemMatcher": "$msCompile"
-      ```
+    ```
+    1.  The "build-and-copy" task which triggers all of the other tasks
+    ```json
+        {
+        // A chain task - build the plugin, then copy it to your
+        // jellyfin server's plugin directory
+        "label": "build-and-copy",
+        "dependsOrder": "sequence",
+        "dependsOn": ["build", "make-plugin-dir", "copy-dll"]
+        },
+    ```
+    2.  A build task. This task builds the plugin without generating summary, but with full paths for file names enabled.
 
-   2. A tasks which creates the necessary plugin directory and a sub-folder for the specific plugin. The plugin directory is located below the [data directory](https://jellyfin.org/docs/general/administration/configuration.html) of the Jellyfin Server. As an example, the following path can be used for the bookshelf plugin: `$HOME/.local/share/jellyfin/plugins/Bookshelf/`
+        ```json
+            {
+            // Build the plugin
+            "label": "build",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "publish",
+                "${workspaceFolder}/${config:pluginName}.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+            },
+        ```
 
-      ```json
-      "label": "make-plugin-dir",
-      "type": "shell",
-      "command": "mkdir",
-      "args": [
-         "-p",
-         "<path to the running jellyfin, not the project cloned from git>/plugins/YourPlugin/"
-      ]
-      ```
+    3.  A tasks which creates the necessary plugin directory and a sub-folder for the specific plugin. The plugin directory is located below the [data directory](https://jellyfin.org/docs/general/administration/configuration.html) of the Jellyfin Server. As an example, the following path can be used for the bookshelf plugin: `$HOME/.local/share/jellyfin/plugins/Bookshelf/`
+        ```json
+            {
+                // Ensure the plugin directory exists before trying to use it
+                "label": "make-plugin-dir",
+                "type": "shell",
+                "command": "mkdir",
+                "args": [
+                "-Force",
+                "-Path",
+                "${config:jellyfinDataDir}/plugins/${config:pluginName}/"
+                ]
+            },
+        ```
 
-   3. A tasks which copies the plugin dll which has been built in step 2.1. The file is copied into it's specific plugin directory within the server's plugin directory.
+    4.  A tasks which copies the plugin dll which has been built in step 2.1. The file is copied into it's specific plugin directory within the server's plugin directory.
 
-      ```json
-         "label": "copy-dll",
-         "type": "shell",
-         "command": "cp",
-         "args": [
-            "./YourPlugin/bin/Debug/net6.0/YourPlugin.dll",
-            "<path to the running jellyfin, not the project cloned from git>/plugins/YourPlugin/YourPlugin.dll"
-         ]
-
-      ```
+        ```json
+            {
+                // Copy the plugin dll to the jellyfin plugin install path
+                // This command copies every .dll from the build directory to the plugin dir
+                // Usually, you probablly only need ${config:pluginName}.dll
+                // But some plugins may bundle extra requirements
+                "label": "copy-dll",
+                "type": "shell",
+                "command": "cp",
+                "args": [
+                "./${config:pluginName}/bin/Debug/net6.0/publish/*",
+                "${config:jellyfinDataDir}/plugins/${config:pluginName}/"
+                ]
+            },
+        ```
 
 ## Licensing
 
