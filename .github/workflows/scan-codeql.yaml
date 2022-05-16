@@ -2,7 +2,15 @@ name: '🔬 Run CodeQL'
 
 on:
   push:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
   pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
+  schedule:
+    - cron: '24 2 * * 4'
   workflow_dispatch:
 
 jobs:
