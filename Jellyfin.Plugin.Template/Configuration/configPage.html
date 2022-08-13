@@ -54,11 +54,11 @@
                         document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
                         document.querySelector('#AString').value = config.AString;
                         Dashboard.hideLoadingMsg();
-                    });    
+                    });
                 });
-            
+
             document.querySelector('#TemplateConfigForm')
-                .addEventListener('submit', function() {
+                .addEventListener('submit', function(e) {
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
                     config.Options = document.querySelector('#Options').value;
@@ -70,6 +70,7 @@
                     });
                 });
 
+                e.preventDefault();
                 return false;
             });
         </script>
