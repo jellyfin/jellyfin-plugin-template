@@ -5,10 +5,10 @@
         "description": "This is an library manager for jellyfin \n",
         "overview": "Let the user manage his library",
         "owner": "Amatsu-Kami",
-        "category": "Metadata",
+        "category": "General",
         "versions": [
             {
-                "version": "test",
+                "version": "1.0.0.0",
                 "changelog": "Initial release.\n",
                 "targetAbi": "10.8.0.0",
                 "sourceUrl": "https://github.com/Amatsu-Kami/jellyfin-plugin-library-manager/archive/refs/tags/test.zip",
