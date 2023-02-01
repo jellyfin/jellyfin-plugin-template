@@ -11,5 +11,5 @@
     // ${env:LOCALAPPDATA}/jellyfin
     "jellyfinDataDir" : "${env:LOCALAPPDATA}/jellyfin",
     // The name of the plugin
-    "pluginName" : "Jellyfin.Plugin.Template",
+    "pluginName" : "Jellyfin.Plugin.Library.Manager"
 }

@@ -1,0 +1,20 @@
+[
+    {
+        "guid": "ee998539-7959-4afa-a88a-9755e315b839",
+        "name": "Library-Manager",
+        "description": "This is an library manager for jellyfin \n",
+        "overview": "Let the user manage his library",
+        "owner": "Amatsu-Kami",
+        "category": "Metadata",
+        "versions": [
+            {
+                "version": "1.0.0.0",
+                "changelog": "Initial release.\n",
+                "targetAbi": "10.0.0.0",
+                "sourceUrl": "https://github.com/Amatsu-Kami/jellyfin-plugin-library-manager/archive/refs/tags/test.zip",
+                "checksum": "24f291b88b3b2edc461980cabb40596b",
+                "timestamp": "2023-02-01T13:06:01Z"
+            }
+        ]
+    }
+]
