@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Jellyfin.Plugin.Library.Manager;
 using Jellyfin.Plugin.Template.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
@@ -26,7 +27,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     }
 
     /// <inheritdoc />
-    public override string Name => "Library-Manager";
+    public override string Name => Constants.PluginName;
 
     /// <inheritdoc />
     public override Guid Id => Guid.Parse("ee998539-7959-4afa-a88a-9755e315b839");

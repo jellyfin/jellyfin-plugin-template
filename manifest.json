@@ -8,12 +8,12 @@
         "category": "General",
         "versions": [
             {
-                "version": "1.0.0.0",
-                "changelog": "Initial release.\n",
+                "version": "0.0.0.1",
+                "changelog": "Alpha release.\n",
                 "targetAbi": "10.7.0.0",
-                "sourceUrl": "https://github.com/Amatsu-Kami/jellyfin-plugin-library-manager/archive/refs/tags/test.zip",
-                "checksum": "24f291b88b3b2edc461980cabb40596b",
-                "timestamp": "2023-02-01T13:06:01Z"
+                "sourceUrl": "https://github.com/Amatsu-Kami/jellyfin-plugin-library-manager/archive/refs/tags/0.0.0.1.zip",
+                "checksum": "b46faf38d8e13928740ce8906d6dc6c7",
+                "timestamp": "2023-02-08T12:40:01Z"
             }
         ]
     }
