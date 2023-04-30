@@ -190,7 +190,7 @@ A full example, which aims to be portable may be found in this repo's `.vscode` 
 This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugin-template` under the same parent directory, though you can customize this in `settings.json`
 
 1. Create a `settings.json` file inside your `.vscode` folder, to specify common options specific to your local setup.
-   ```json
+   ```jsonc
     {
         // jellyfinDir : The directory of the cloned jellyfin server project
         // This needs to be built once before it can be used
@@ -210,7 +210,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
 
 1. To automate the launch process, create a new `launch.json` file for C# projects inside the `.vscode` folder. The example below shows only the relevant parts of the file. Adjustments to your specific setup and operating system may be required.
 
-   ```json
+   ```jsonc
     {
         // Paths and plugin names are configured in settings.json
         "version": "0.2.0",
@@ -239,7 +239,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
 2. Create a `tasks.json` file inside your `.vscode` folder and specify a `build-and-copy` task that will run in `sequence` order. This tasks depends on multiple other tasks and all of those other tasks can be defined as simple `shell` tasks that run commands like the `cp` command to copy a file. The sequence to run those tasks in is given below. Please note that it might be necessary to adjust the examples for your specific setup and operating system.
 
    The full file is shown here - Specific sections will be discussed in depth
-    ```json
+    ```jsonc
     {
         // Paths and plugin name are configured in settings.json
         "version": "2.0.0",
@@ -298,7 +298,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
 
     ```
     1.  The "build-and-copy" task which triggers all of the other tasks
-    ```json
+    ```jsonc
         {
         // A chain task - build the plugin, then copy it to your
         // jellyfin server's plugin directory
@@ -309,7 +309,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
     ```
     2.  A build task. This task builds the plugin without generating summary, but with full paths for file names enabled.
 
-        ```json
+        ```jsonc
             {
             // Build the plugin
             "label": "build",
@@ -330,7 +330,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
         ```
 
     3.  A tasks which creates the necessary plugin directory and a sub-folder for the specific plugin. The plugin directory is located below the [data directory](https://jellyfin.org/docs/general/administration/configuration.html) of the Jellyfin Server. As an example, the following path can be used for the bookshelf plugin: `$HOME/.local/share/jellyfin/plugins/Bookshelf/`
-        ```json
+        ```jsonc
             {
                 // Ensure the plugin directory exists before trying to use it
                 "label": "make-plugin-dir",
@@ -346,7 +346,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
 
     4.  A tasks which copies the plugin dll which has been built in step 2.1. The file is copied into it's specific plugin directory within the server's plugin directory.
 
-        ```json
+        ```jsonc
             {
                 // Copy the plugin dll to the jellyfin plugin install path
                 // This command copies every .dll from the build directory to the plugin dir
