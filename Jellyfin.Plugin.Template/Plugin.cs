@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 using Jellyfin.Plugin.Template.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
