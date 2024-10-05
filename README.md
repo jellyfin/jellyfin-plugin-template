@@ -86,7 +86,7 @@ You need to populate some of your plugin's information. Go ahead a put in a stri
 - **Linux and OS X Users**: you can use the Powershell Core command `New-Guid` or this command from your shell of choice:
 
    ```bash
-   od -x /dev/urandom | head -1 | awk '{OFS="-"; srand($6); sub(/./,"4",$5); sub(/./,substr("89ab",rand()*4,1),$6); print $2$3,$4,$5,$6,$7$8$9}'
+   od -x /dev/urandom | head -n1 | awk '{OFS="-"; srand($6); sub(/./,"4",$5); sub(/./,substr("89ab",1+rand()*4,1),$6); print $2$3,$4,$5,$6,$7$8$9}'
    ```
 
 or
