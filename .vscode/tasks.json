@@ -7,7 +7,11 @@
       // jellyfin server's plugin directory
       "label": "build-and-copy",
       "dependsOrder": "sequence",
-      "dependsOn": ["build", "make-plugin-dir", "copy-dll"]
+      "dependsOn": [
+        "build",
+        "make-plugin-dir",
+        "copy-dll"
+      ]
     },
     {
       // Build the plugin
@@ -27,29 +31,45 @@
       "problemMatcher": "$msCompile"
     },
     {
-        // Ensure the plugin directory exists before trying to use it
-        "label": "make-plugin-dir",
-        "type": "shell",
-        "command": "mkdir",
+      // Ensure the plugin directory exists before trying to use it
+      "label": "make-plugin-dir",
+      "type": "shell",
+      "command": "mkdir",
+      "windows": {
         "args": [
-           "-Force",
-           "-Path",
-           "${config:jellyfinDataDir}/plugins/${config:pluginName}/"
+          "-Force",
+          "-Path",
+          "${config:jellyfinWindowsDataDir}/plugins/${config:pluginName}/"
         ]
+      },
+      "linux": {
+        "args": [
+          "-p",
+          "${config:jellyfinLinuxDataDir}/plugins/${config:pluginName}/"
+        ]
+      }
     },
     {
-        // Copy the plugin dll to the jellyfin plugin install path
-        // This command copies every .dll from the build directory to the plugin dir
-        // Usually, you probablly only need ${config:pluginName}.dll
-        // But some plugins may bundle extra requirements
-        "label": "copy-dll",
-        "type": "shell",
-        "command": "cp",
+      // Copy the plugin dll to the jellyfin plugin install path
+      // This command copies every .dll from the build directory to the plugin dir
+      // Usually, you probablly only need ${config:pluginName}.dll
+      // But some plugins may bundle extra requirements
+      "label": "copy-dll",
+      "type": "shell",
+      "command": "cp",
+      "windows": {
         "args": [
-           "./${config:pluginName}/bin/Debug/net6.0/publish/*",
-           "${config:jellyfinDataDir}/plugins/${config:pluginName}/"
+          "./${config:pluginName}/bin/Debug/net6.0/publish/*",
+          "${config:jellyfinWindowsDataDir}/plugins/${config:pluginName}/"
         ]
-
+      },
+      "linux": {
+        "args": [
+          "-r",
+          "./${config:pluginName}/bin/Debug/net6.0/publish/*",
+          "${config:jellyfinLinuxDataDir}/plugins/${config:pluginName}/"
+        ]
+      }
     },
   ]
 }
