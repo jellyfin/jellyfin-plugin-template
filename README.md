@@ -1,10 +1,10 @@
 # So you want to make a Jellyfin plugin
 
-Awesome! This guide is for you. Jellyfin plugins are written using the dotnet standard framework. What that means is you can write them in any language that implements the CLI or the DLI and can compile to net6.0. The examples on this page are in C# because that is what most of Jellyfin is written in, but F#, Visual Basic, and IronPython should all be compatible once compiled.
+Awesome! This guide is for you. Jellyfin plugins are written using the dotnet standard framework. What that means is you can write them in any language that implements the CLI or the DLI and can compile to net8.0. The examples on this page are in C# because that is what most of Jellyfin is written in, but F#, Visual Basic, and IronPython should all be compatible once compiled.
 
 ## 0. Things you need to get started
 
-- [Dotnet SDK 6.0](https://dotnet.microsoft.com/download)
+- [Dotnet SDK 8.0](https://dotnet.microsoft.com/download)
 
 - An editor of your choice. Some free choices are:
 
@@ -39,7 +39,7 @@ If you'd rather start from scratch keep going on to step one. This assumes no sp
 Make a new dotnet standard project with the following command, it will make a directory for itself.
 
 ```
-dotnet new classlib -f net6.0 -n MyJellyfinPlugin
+dotnet new classlib -f net8.0 -n MyJellyfinPlugin
 ```
 
 Now add the Jellyfin shared libraries.
@@ -126,7 +126,9 @@ If your plugin doesn't fit perfectly neatly into a predefined interface, never f
 
 - **IPluginConfigurationPage** - Allows you to have a plugin config page on the dashboard. If you used one of the quickstart example projects, a premade page with some useful components to work with has been created for you! If not you can check out this guide here for how to whip one up.
 
-- **IServerEntryPoint** - Allows you to run code at server startup that will stay in memory. You can make as many of these as you need and it is wildly useful for loading configs or persisting state. **Be aware that your main plugin class (IBasePlugin) cannot also be a IServerEntryPoint.**
+ **IPluginServiceRegistrator** - Will be located by Jellyfin at server startup and allows you to add services to the DI container to allow for injection in your plugin's classes later.
+
+- **IHostedService** - Allows you to run code as a background task that will be started at program startup and will remain in memory. See [Microsoft's documentation](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services?view=aspnetcore-8.0&tabs=visual-studio#ihostedservice-interface) for more information. You can make as many of these as you need; make Jellyfin aware of them with an `IPluginServiceRegistrator`. It is wildly useful for loading configs or persisting state. **Be aware that your main plugin class (IBasePlugin) cannot also be a IHostedService.**
 
 - **ControllerBase** - Allows you to define custom REST-API endpoints. This is the default ASP.NET Web-API controller. You can use it exactly as you would in a normal Web-API project. Learn more about it [here](https://docs.microsoft.com/aspnet/core/web-api/?view=aspnetcore-5.0).
 
@@ -220,7 +222,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
                 "name": "Launch",
                 "request": "launch",
                 "preLaunchTask": "build-and-copy",
-                "program": "${config:jellyfinDir}/bin/Debug/net6.0/jellyfin.dll",
+                "program": "${config:jellyfinDir}/bin/Debug/net8.0/jellyfin.dll",
                 "args": [
                 //"--nowebclient"
                 "--webdir",
@@ -288,7 +290,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
                 "type": "shell",
                 "command": "cp",
                 "args": [
-                "./${config:pluginName}/bin/Debug/net6.0/publish/*",
+                "./${config:pluginName}/bin/Debug/net8.0/publish/*",
                 "${config:jellyfinDataDir}/plugins/${config:pluginName}/"
                 ]
 
@@ -356,7 +358,7 @@ This example expects you to clone `jellyfin`, `jellyfin-web` and `jellyfin-plugi
                 "type": "shell",
                 "command": "cp",
                 "args": [
-                "./${config:pluginName}/bin/Debug/net6.0/publish/*",
+                "./${config:pluginName}/bin/Debug/net8.0/publish/*",
                 "${config:jellyfinDataDir}/plugins/${config:pluginName}/"
                 ]
             },
