@@ -20,6 +20,7 @@
       "type": "shell",
       "args": [
         "publish",
+        "--configuration=Debug",
         "${workspaceFolder}/${config:pluginName}.sln",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
