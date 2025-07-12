@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json.schemastore.org/template",
+    "author": "Jellyfin Team",
+    "classifications": [
+        "Plugin",
+        "Jellyfin"
+    ],
+    "identity": "Jellyfin.Plugin.Template",
+    "name": "Jellyfin Plugin",
+    "description": "Plugin Template for Jellyfin",
+    "shortName": "Jellyfin-plugin"
+}
