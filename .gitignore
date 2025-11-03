@@ -2,4 +2,6 @@ bin/
 obj/
 .vs/
 .idea/
+.vscode/
+FrameDropCheck.Plugin/.env
 artifacts

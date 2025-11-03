@@ -1,6 +1,6 @@
 ---
-name: "Template"
-guid: "eb5d7894-8eef-4b36-aa6f-5d124e828ce1"
+name: "FrameDropCheck.Plugin"
+guid: "d3075c1e-6e7c-4a70-b989-170aa2f4aa3e"
 version: "1.0.0.0"
 targetAbi: "10.9.0.0"
 framework: "net8.0"
@@ -9,8 +9,8 @@ description: >
   This is a longer description that can span more than one
   line and include details about your plugin.
 category: "General"
-owner: "jellyfin"
+owner: "linetor"
 artifacts:
-- "Jellyfin.Plugin.Template.dll"
+  - "FrameDropCheck.Plugin.dll"
 changelog: >
   changelog

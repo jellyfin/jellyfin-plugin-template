@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>FrameDropCheck.Plugin</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Nullable>enable</Nullable>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <CodeAnalysisRuleSet>../jellyfin.ruleset</CodeAnalysisRuleSet>
+
+     <PluginId>d3075c1e-6e7c-4a70-b989-170aa2f4aa3e</PluginId>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0.0</InformationalVersion>
+    <PackageId>FrameDropCheck.Plugin</PackageId> <Title>FrameDropCheck</Title>
+    <Description>A Jellyfin plugin to check for frame drops.</Description>
+    <PackageTags>jellyfin;plugin;framedrop</PackageTags>
+     <IsPackable>true</IsPackable>
+     <!-- <PackageProjectUrl>https://jellyfin.org</PackageProjectUrl> -->
+     <!-- <RepositoryUrl>https://github.com/jellyfin/jellyfin-plugin-template</RepositoryUrl> -->
+     <!-- <RepositoryType>git</RepositoryType> -->
+
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="All" />
+    <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />
+  </ItemGroup>
+      <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="10.9.11" />
+    <PackageReference Include="Jellyfin.Model" Version="10.9.11" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+<!--
+
+
+    
+    -->
+
+  <ItemGroup>
+    <None Remove="Configuration\configPage.html" />
+    <EmbeddedResource Include="Configuration\configPage.html" />
+  </ItemGroup>
+
+</Project>

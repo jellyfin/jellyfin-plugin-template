@@ -1,0 +1,9 @@
+{
+    "Id": "d3075c1e-6e7c-4a70-b989-170aa2f4aa3e",
+    "Name": "FrameDropCheck",
+    "Description": "Detects frame drops and re-encodes videos.",
+    "TargetAbi": "10.9.0.0",
+    "Version": "1.0.0.0",
+    "Owner": "linetor",
+    "ConfigurationPage": "configuration/configPage.html"
+}
