@@ -60,14 +60,14 @@
       "command": "cp",
       "windows": {
         "args": [
-          "./${config:pluginName}/bin/Debug/net8.0/publish/*",
+          "./${config:pluginName}/bin/Debug/net9.0/publish/*",
           "${config:jellyfinWindowsDataDir}/plugins/${config:pluginName}/"
         ]
       },
       "linux": {
         "args": [
           "-r",
-          "./${config:pluginName}/bin/Debug/net8.0/publish/*",
+          "./${config:pluginName}/bin/Debug/net9.0/publish/*",
           "${config:jellyfinLinuxDataDir}/plugins/${config:pluginName}/"
         ]
       }
