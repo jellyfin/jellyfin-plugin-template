@@ -30,6 +30,8 @@
     <EmbeddedResource Include="Configuration\configPage.html" />
     <None Remove="Web\inject.js" />
     <EmbeddedResource Include="Web\inject.js" />
+    <None Remove="Web\logo.png" />
+    <EmbeddedResource Include="Web\logo.png" />
   </ItemGroup>
 
 </Project>

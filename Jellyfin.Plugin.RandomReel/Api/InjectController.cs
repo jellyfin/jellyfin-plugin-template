@@ -38,4 +38,26 @@ public class InjectController : ControllerBase
         var content = reader.ReadToEnd();
         return Content(content, "application/javascript");
     }
+
+    /// <summary>
+    /// Returns the plugin logo embedded in the plugin assembly.
+    /// </summary>
+    /// <returns>PNG image.</returns>
+    [HttpGet("logo.png")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult GetLogo()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        const string ResourceName = "Jellyfin.Plugin.RandomReel.Web.logo.png";
+
+        var stream = assembly.GetManifestResourceStream(ResourceName);
+        if (stream is null)
+        {
+            return NotFound("logo.png resource not found in assembly.");
+        }
+
+        return File(stream, "image/png");
+    }
 }
