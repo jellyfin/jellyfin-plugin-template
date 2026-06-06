@@ -1,16 +1,17 @@
 ---
-name: "Template"
-guid: "eb5d7894-8eef-4b36-aa6f-5d124e828ce1"
+name: "Random Reel"
+guid: "a3a23ce9-cf03-4772-b49a-170913d6139a"
 version: "1.0.0.0"
 targetAbi: "10.9.0.0"
 framework: "net8.0"
-overview: "Short description about your plugin"
+overview: "Random clip playback from folders and playlists"
 description: >
-  This is a longer description that can span more than one
-  line and include details about your plugin.
+  Plays random clips from any folder or playlist, starting at a random
+  position within configurable margins. Clips never appear in Continue
+  Watching or Recently Watched.
 category: "General"
-owner: "jellyfin"
+owner: "deppa"
 artifacts:
-- "Jellyfin.Plugin.Template.dll"
+- "Jellyfin.Plugin.RandomReel.dll"
 changelog: >
-  changelog
+  Initial release.
