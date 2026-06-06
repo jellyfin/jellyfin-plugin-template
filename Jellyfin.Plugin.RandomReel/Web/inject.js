@@ -10,11 +10,39 @@
 
     var API_BASE = '/RandomReel';
     var lastItemId = null;
-    var busy = false; // prevent MutationObserver re-entry while we manipulate the DOM
+    var busy = false;
+
+    // Active Random Reel state — null when not in a reel
+    var rrSession = null; // { itemId, folderId, graceTimer, pollInterval }
+
+    // ── 0. Intercept fetch to block progress reporting for Random Reel clips ──────
+    // Jellyfin's player sends POST /Sessions/Playing/Progress every few seconds,
+    // which saves the playback position and adds items to "Continue Watching".
+    // We suppress those reports while a reel is active.
+    // When the player reports PlaybackStopped we let it through, then clean up.
+    var _originalFetch = window.fetch.bind(window);
+    window.fetch = function (url, options) {
+        if (rrSession && typeof url === 'string') {
+            if (url.indexOf('/Sessions/Playing/Progress') !== -1) {
+                // Suppress — don't save position to server
+                return Promise.resolve(new Response(null, { status: 204 }));
+            }
+            if (url.indexOf('/Sessions/Playing/Stopped') !== -1) {
+                // Let the stop report through, then clean up twice:
+                // immediately (for position reset) and again after 3 s
+                // (in case the player fires a stray Progress just before Stopped).
+                var stoppedItemId = rrSession.itemId;
+                return _originalFetch(url, options).then(function (r) {
+                    cleanupWatchHistory(stoppedItemId);
+                    setTimeout(function () { cleanupWatchHistory(stoppedItemId); }, 3000);
+                    return r;
+                });
+            }
+        }
+        return _originalFetch(url, options);
+    };
 
     // ── 1. Capture item ID on any click outside the action sheet ─────────────────
-    // We intentionally skip clicks inside .actionSheet so that action-sheet buttons
-    // (which may carry stale/wrong data-id attributes) never overwrite lastItemId.
     document.addEventListener('click', function (e) {
         if (e.target.closest && e.target.closest('.actionSheet')) return;
         var el = e.target;
@@ -26,7 +54,7 @@
     }, true);
 
     // ── 2. Watch for Jellyfin's action sheet to appear ───────────────────────────
-    var observer = new MutationObserver(function (mutations) {
+    var sheetObserver = new MutationObserver(function (mutations) {
         if (busy) return;
         for (var i = 0; i < mutations.length; i++) {
             var added = mutations[i].addedNodes;
@@ -40,8 +68,7 @@
             }
         }
     });
-
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    sheetObserver.observe(document.documentElement, { childList: true, subtree: true });
 
     // ── 3. Inject the "Random Reel" menu item ────────────────────────────────────
     function tryInject(sheet) {
@@ -50,8 +77,7 @@
             var shuffleItem = null;
             for (var i = 0; i < allItems.length; i++) {
                 if ((allItems[i].textContent || '').trim().indexOf('Shuffle') === 0) {
-                    shuffleItem = allItems[i];
-                    break;
+                    shuffleItem = allItems[i]; break;
                 }
             }
             if (!shuffleItem || sheet.querySelector('.rr-menu-item')) return;
@@ -59,22 +85,15 @@
             busy = true;
             var rrItem = shuffleItem.cloneNode(true);
             rrItem.classList.add('rr-menu-item');
-            // Remove any data-id the Shuffle button may have had — prevents
-            // the capture listener from picking up a wrong/stale ID.
             rrItem.removeAttribute('data-id');
 
             var iconEl = rrItem.querySelector('.listItemIcon, .material-icons, i');
             if (iconEl) iconEl.textContent = 'casino';
 
-            // Find the element whose text is "Shuffle" and rename it
             var allSpans = rrItem.querySelectorAll('span, div');
             for (var k = 0; k < allSpans.length; k++) {
-                if ((allSpans[k].childNodes.length === 1 &&
-                     allSpans[k].childNodes[0].nodeType === 3 &&
-                     allSpans[k].textContent.trim() === 'Shuffle') ||
-                    allSpans[k].textContent.trim() === 'Shuffle') {
-                    allSpans[k].textContent = 'Random Reel';
-                    break;
+                if (allSpans[k].textContent.trim() === 'Shuffle') {
+                    allSpans[k].textContent = 'Random Reel'; break;
                 }
             }
 
@@ -84,14 +103,9 @@
             rrItem.addEventListener('click', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
-
-                // Close the sheet with Escape (safest — lets Jellyfin clean up its own state)
                 document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
-
                 var itemId = lastItemId;
                 if (!itemId) { console.warn('[RandomReel] No item ID captured.'); return; }
-
-                // Small delay so the sheet animation finishes before playback starts
                 setTimeout(function () { launchRandomReel(itemId); }, 150);
             });
         } catch (err) {
@@ -100,7 +114,7 @@
         }
     }
 
-    // ── 4. Resolve token + headers from ApiClient ────────────────────────────────
+    // ── 4. Auth headers ───────────────────────────────────────────────────────────
     function authHeaders() {
         var token = null, deviceId = null, deviceName = null, clientName = null, version = null;
         try {
@@ -118,10 +132,156 @@
         return { 'Authorization': auth, 'Content-Type': 'application/json' };
     }
 
-    // ── 5. Ask the plugin for the next clip, then play via Sessions API ──────────
+    // ── 5. Get current device's session ──────────────────────────────────────────
+    function getMySession(hdrs) {
+        var deviceId = null;
+        try { deviceId = ApiClient.deviceId && ApiClient.deviceId(); } catch (e) { /* ignore */ }
+        var url = '/Sessions' + (deviceId ? '?deviceId=' + encodeURIComponent(deviceId) : '');
+        return fetch(url, { headers: hdrs })
+            .then(function (r) { return r.json(); })
+            .then(function (sessions) {
+                for (var i = 0; i < sessions.length; i++) {
+                    if (sessions[i].DeviceId === deviceId) return sessions[i];
+                }
+                return sessions[0] || null;
+            });
+    }
+
+    // ── 6. Clean up watch history (mark played → mark unplayed) ──────────────────
+    function cleanupWatchHistory(itemId) {
+        var hdrs = authHeaders();
+        var userId = null;
+        try { userId = ApiClient.getCurrentUserId && ApiClient.getCurrentUserId(); } catch (e) { /* ignore */ }
+        if (!userId) { console.warn('[RandomReel] Cannot clean watch history — userId unknown.'); return; }
+
+        var base = '/Users/' + userId + '/PlayedItems/' + itemId;
+        fetch(base, { method: 'POST', headers: hdrs })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Mark played: ' + r.status);
+                return fetch(base, { method: 'DELETE', headers: hdrs });
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Mark unplayed: ' + r.status);
+                console.log('[RandomReel] Watch history cleaned for', itemId);
+            })
+            .catch(function (err) { console.warn('[RandomReel] cleanupWatchHistory:', err); });
+    }
+
+    // ── 7. Stop monitoring ────────────────────────────────────────────────────────
+    function stopMonitor() {
+        if (rrSession) {
+            if (rrSession.graceTimer)  clearTimeout(rrSession.graceTimer);
+            if (rrSession.pollInterval) clearInterval(rrSession.pollInterval);
+        }
+        rrSession = null;
+        unhookNextButton();
+    }
+
+    // ── 8. Poll every 8 s — only for cleanup, never auto-plays ───────────────────
+    // Grace period: wait 15 s before first poll so the player has time to register
+    // the session on the server. Require 2 consecutive "not playing" polls before
+    // concluding the clip has stopped (avoids false positives during buffering).
+    function startMonitor(itemId, folderId) {
+        stopMonitor();
+        rrSession = { itemId: itemId, folderId: folderId, pollInterval: null, missCount: 0 };
+
+        var capturedSession = rrSession;
+
+        // Start polling only after grace period
+        capturedSession.graceTimer = setTimeout(function () {
+            if (!rrSession || rrSession.itemId !== itemId) return;
+
+            rrSession.pollInterval = setInterval(function () {
+                if (!rrSession || rrSession.itemId !== itemId) return;
+
+                var hdrs = authHeaders();
+                getMySession(hdrs)
+                    .then(function (session) {
+                        if (!rrSession || rrSession.itemId !== itemId) return;
+                        var nowPlaying = session && session.NowPlayingItem;
+
+                        if (!nowPlaying || nowPlaying.Id !== itemId) {
+                            rrSession.missCount = (rrSession.missCount || 0) + 1;
+                            if (rrSession.missCount >= 2) {
+                                // Two consecutive polls with no match — clip truly stopped
+                                var stoppedItemId = rrSession.itemId;
+                                stopMonitor();
+                                cleanupWatchHistory(stoppedItemId);
+                                console.log('[RandomReel] Playback stopped — reel ended.');
+                            }
+                        } else {
+                            rrSession.missCount = 0; // reset on successful match
+                        }
+                    })
+                    .catch(function () { /* ignore transient poll errors */ });
+            }, 8000);
+        }, 15000);
+
+        hookNextButton(folderId);
+    }
+
+    // ── 9. Next-button hook ───────────────────────────────────────────────────────
+    // We find the player's Next button once and attach a capturing listener.
+    // The listener is removed when the reel ends (stopMonitor → unhookNextButton).
+    var _nextBtn = null;
+    var _nextHandler = null;
+    var _nextObserver = null;
+
+    function onNextClick(e, folderId) {
+        if (!rrSession) return;
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        var capturedItemId   = rrSession.itemId;
+        var capturedFolderId = folderId;
+        stopMonitor();
+        cleanupWatchHistory(capturedItemId);
+        console.log('[RandomReel] Next clicked — launching next clip.');
+        setTimeout(function () { launchRandomReel(capturedFolderId); }, 200);
+    }
+
+    function unhookNextButton() {
+        if (_nextObserver) { _nextObserver.disconnect(); _nextObserver = null; }
+        if (_nextBtn && _nextHandler) {
+            _nextBtn.removeEventListener('click', _nextHandler, true);
+            _nextBtn._rrHooked = false;
+        }
+        _nextBtn = null;
+        _nextHandler = null;
+    }
+
+    function hookNextButton(folderId) {
+        unhookNextButton(); // clear any stale hook
+
+        function tryHook() {
+            // Jellyfin uses btnNextTrack in the full video player
+            var btn = document.querySelector('.btnNextTrack');
+            if (btn && !btn._rrHooked) {
+                _nextBtn = btn;
+                _nextHandler = function (e) { onNextClick(e, folderId); };
+                btn.addEventListener('click', _nextHandler, true);
+                btn._rrHooked = true;
+                console.log('[RandomReel] Next button hooked.');
+                if (_nextObserver) { _nextObserver.disconnect(); _nextObserver = null; }
+            }
+        }
+
+        // Try immediately (player might already be open)
+        tryHook();
+
+        // If not found yet, watch for the player to appear — disconnect once hooked
+        if (!_nextBtn) {
+            _nextObserver = new MutationObserver(function () {
+                if (!rrSession) { _nextObserver.disconnect(); _nextObserver = null; return; }
+                tryHook();
+            });
+            _nextObserver.observe(document.documentElement, { childList: true, subtree: true });
+        }
+    }
+
+    // ── 10. Trigger playback via Sessions API ─────────────────────────────────────
     function launchRandomReel(folderId) {
         var hdrs = authHeaders();
-        var rrData = null; // store plugin response for later use
+        var rrData = null;
 
         fetch(API_BASE + '/Next?folderId=' + encodeURIComponent(folderId), { headers: hdrs })
             .then(function (r) {
@@ -129,51 +289,27 @@
                 return r.json();
             })
             .then(function (data) {
-                // Support both PascalCase (default STJ) and camelCase serialization
                 rrData = {
-                    itemId:             data.itemId             || data.ItemId,
-                    startPositionTicks: data.startPositionTicks || data.StartPositionTicks,
+                    itemId:               data.itemId               || data.ItemId,
+                    startPositionTicks:   data.startPositionTicks   || data.StartPositionTicks,
                     playbackDurationTicks: data.playbackDurationTicks || data.PlaybackDurationTicks,
-                    remainingInPool:    data.remainingInPool    || data.RemainingInPool
+                    remainingInPool:      data.remainingInPool      || data.RemainingInPool
                 };
-                console.log('[RandomReel] Next clip (raw):', JSON.stringify(data));
-                console.log('[RandomReel] Next clip (resolved):', rrData);
-
-                // Find the current browser session
-                var deviceId = null;
-                try { deviceId = ApiClient.deviceId && ApiClient.deviceId(); } catch (e) { /* ignore */ }
-                console.log('[RandomReel] deviceId:', deviceId);
-
-                var sessionsUrl = '/Sessions' + (deviceId ? '?deviceId=' + encodeURIComponent(deviceId) : '');
-                return fetch(sessionsUrl, { headers: hdrs }).then(function (r) { return r.json(); });
+                console.log('[RandomReel] Next clip:', rrData.itemId,
+                    '@ tick', rrData.startPositionTicks, 'remaining:', rrData.remainingInPool);
+                return getMySession(hdrs);
             })
-            .then(function (sessions) {
-                console.log('[RandomReel] Sessions:', sessions.map(function(s) {
-                    return { Id: s.Id, DeviceId: s.DeviceId, DeviceName: s.DeviceName, Client: s.Client };
-                }));
-
-                var deviceId = null;
-                try { deviceId = ApiClient.deviceId && ApiClient.deviceId(); } catch (e) { /* ignore */ }
-
-                var session = null;
-                for (var i = 0; i < sessions.length; i++) {
-                    if (sessions[i].DeviceId === deviceId) { session = sessions[i]; break; }
-                }
-                if (!session && sessions.length > 0) session = sessions[0];
+            .then(function (session) {
                 if (!session) throw new Error('No active session found');
-
-                console.log('[RandomReel] Using session:', session.Id, session.DeviceName);
 
                 var startTicks = Math.floor(rrData.startPositionTicks);
                 var qs = 'playCommand=PlayNow' +
-                         '&itemIds=' + encodeURIComponent(rrData.itemId) +
-                         '&startPositionTicks=' + startTicks +
-                         '&mediaSourceId=' + encodeURIComponent(rrData.itemId);
-                console.log('[RandomReel] Playing querystring:', qs);
+                         '&itemIds='             + encodeURIComponent(rrData.itemId) +
+                         '&startPositionTicks='  + startTicks +
+                         '&mediaSourceId='       + encodeURIComponent(rrData.itemId);
 
                 return fetch('/Sessions/' + session.Id + '/Playing?' + qs, {
-                    method: 'POST',
-                    headers: hdrs
+                    method: 'POST', headers: hdrs
                 }).then(function (r) {
                     if (!r.ok) {
                         return r.text().then(function (txt) {
@@ -181,10 +317,9 @@
                         });
                     }
                     console.log('[RandomReel] Playback started.');
+                    startMonitor(rrData.itemId, folderId);
                 });
             })
-            .catch(function (err) {
-                console.error('[RandomReel] Error:', err);
-            });
+            .catch(function (err) { console.error('[RandomReel] Error:', err); });
     }
 })();
