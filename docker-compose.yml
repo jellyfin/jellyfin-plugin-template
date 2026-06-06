@@ -10,7 +10,9 @@ services:
       - ./jellyfin-data/config:/config
       - ./jellyfin-data/cache:/cache
       # Plugin DLL — rebuilt by deploy.sh and hot-picked up after Jellyfin restart
-      - ./dist:/config/plugins/Shuffle
-      # Mount a local media folder if you have one; otherwise create dummy files
+      - ./dist:/config/plugins/RandomReel
+      # index.html mounted as writable file so the plugin can inject the <script> tag.
+      # deploy.sh extracts this file automatically on first run.
+      - ./jellyfin-data/index.html:/jellyfin/jellyfin-web/index.html
       - /Users/deppa/workspace-personale/Jellyfin-Roulette/media:/media:ro
     restart: unless-stopped

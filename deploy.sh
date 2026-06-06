@@ -14,7 +14,35 @@ CONFIGURATION="Release"
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 OUT_DIR="$PROJECT_DIR/dist"
-mkdir -p "$OUT_DIR"
+mkdir -p "$OUT_DIR" "$PROJECT_DIR/jellyfin-data"
+
+# ── Prepare index.html with Random Reel script tag ────────────────────────────
+# We extract the file from the image (overriding the entrypoint to avoid
+# starting the Jellyfin server) and inject our <script> tag directly on the
+# host copy. docker-compose then mounts this pre-patched file into the container,
+# so the plugin never needs write access at runtime.
+SCRIPT_TAG='<script src="/RandomReel/inject.js" defer></script>'
+INDEX_FILE="$PROJECT_DIR/jellyfin-data/index.html"
+
+if [[ ! -f "$INDEX_FILE" ]] || ! grep -qF "$SCRIPT_TAG" "$INDEX_FILE"; then
+  echo "==> Extracting index.html from jellyfin/jellyfin:10.9.11 image..."
+  docker run --rm --entrypoint=cat "jellyfin/jellyfin:10.9.11" \
+    /jellyfin/jellyfin-web/index.html \
+    > "$INDEX_FILE"
+  echo "==> Injecting Random Reel script tag..."
+  # Use Python (available everywhere) to insert the tag before </body>
+  python3 - "$INDEX_FILE" "$SCRIPT_TAG" << 'PYEOF'
+import sys, pathlib
+path, tag = pathlib.Path(sys.argv[1]), sys.argv[2]
+content = path.read_text()
+if tag not in content:
+    content = content.replace('</body>', tag + '\n</body>', 1)
+    path.write_text(content)
+    print("==> index.html patched.")
+else:
+    print("==> index.html already patched, skipping.")
+PYEOF
+fi
 
 echo "==> Building $CONFIGURATION inside dotnet SDK container..."
 docker run --rm \

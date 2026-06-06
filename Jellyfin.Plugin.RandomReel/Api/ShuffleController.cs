@@ -17,7 +17,7 @@ namespace Jellyfin.Plugin.RandomReel.Api;
 /// Shuffle API controller.
 /// </summary>
 [ApiController]
-[Route("Shuffle")]
+[Route("RandomReel")]
 public class ShuffleController : ControllerBase
 {
     private const long TicksPerMinute = 600_000_000L;

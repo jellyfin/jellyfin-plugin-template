@@ -28,6 +28,8 @@
   <ItemGroup>
     <None Remove="Configuration\configPage.html" />
     <EmbeddedResource Include="Configuration\configPage.html" />
+    <None Remove="Web\inject.js" />
+    <EmbeddedResource Include="Web\inject.js" />
   </ItemGroup>
 
 </Project>
