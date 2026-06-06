@@ -23,11 +23,111 @@ A Jellyfin plugin that plays random clips from any folder or playlist, starting 
 ## Requirements
 
 - Jellyfin **10.9.11**
-- Docker (for build and local dev)
+- Docker (build) — no local .NET installation needed
 
 ---
 
-## Quick Start (Docker)
+## Installation on an existing Jellyfin server (Docker Compose)
+
+> This is the recommended path if you already have Jellyfin running via Docker Compose.
+
+### 1 — Build the plugin
+
+On any machine that has Docker:
+
+```bash
+git clone <this-repo>
+cd jellyfin-plugin-shuffle
+
+# Produces dist/Jellyfin.Plugin.RandomReel.dll + dist/meta.json
+docker run --rm \
+  -v "$(pwd)":/src -w /src \
+  mcr.microsoft.com/dotnet/sdk:8.0 \
+  dotnet build Jellyfin.Plugin.RandomReel/Jellyfin.Plugin.RandomReel.csproj \
+    -c Release --nologo -v quiet
+```
+
+Copy the two files from `dist/` to your server (e.g. via `scp` or a shared volume):
+- `Jellyfin.Plugin.RandomReel.dll`
+- `meta.json`
+
+### 2 — Drop the files into the plugins directory
+
+On your server, place both files inside a dedicated folder under Jellyfin's plugin directory. The exact path depends on how your `docker-compose.yml` mounts `/config`:
+
+```
+<your-jellyfin-config>/plugins/RandomReel/
+├── Jellyfin.Plugin.RandomReel.dll
+└── meta.json
+```
+
+Example — if your compose file has:
+
+```yaml
+volumes:
+  - /srv/jellyfin/config:/config
+```
+
+Then put the files in `/srv/jellyfin/config/plugins/RandomReel/`.
+
+### 3 — Patch index.html
+
+The plugin needs a `<script>` tag injected into Jellyfin's `index.html`. There are two ways to do this:
+
+#### Option A — Let the plugin patch it automatically (simplest)
+
+The plugin patches `index.html` on startup if it has write access to the web directory. Mount `index.html` as a writable file in your compose:
+
+```bash
+# Extract a clean index.html from the Jellyfin image (match your running version)
+docker run --rm --entrypoint=cat jellyfin/jellyfin:10.9.11 \
+  /jellyfin/jellyfin-web/index.html > /srv/jellyfin/index.html
+```
+
+Add this volume to your `docker-compose.yml`:
+
+```yaml
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:10.9.11
+    volumes:
+      - /srv/jellyfin/config:/config
+      - /srv/jellyfin/cache:/cache
+      # existing volumes ...
+      - /srv/jellyfin/index.html:/jellyfin/jellyfin-web/index.html  # ← add this
+```
+
+On first startup the plugin will inject the `<script>` tag and log:
+```
+[RandomReel] Patched index.html at /jellyfin/jellyfin-web/index.html.
+```
+
+On subsequent restarts it detects the tag is already present and skips patching.
+
+#### Option B — Patch manually (if you prefer not to mount index.html)
+
+```bash
+# Extract
+docker run --rm --entrypoint=cat jellyfin/jellyfin:10.9.11 \
+  /jellyfin/jellyfin-web/index.html > index.html
+
+# Inject the tag
+sed -i 's|</body>|<script src="/RandomReel/inject.js" defer></script>\n</body>|' index.html
+
+# Mount the patched file (same volume line as Option A)
+```
+
+### 4 — Restart Jellyfin
+
+```bash
+docker compose restart jellyfin
+```
+
+Open **Dashboard → Plugins** and confirm *Random Reel* shows status **Active**.
+
+---
+
+## Quick Start (local dev with Docker)
 
 ```bash
 # Clone and enter the repo
