@@ -1,0 +1,16 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:10.9.11
+    container_name: jellyfin-shuffle-dev
+    ports:
+      - "8096:8096"
+    environment:
+      - JELLYFIN_PublishedServerUrl=http://localhost:8096
+    volumes:
+      - ./jellyfin-data/config:/config
+      - ./jellyfin-data/cache:/cache
+      # Plugin DLL — rebuilt by deploy.sh and hot-picked up after Jellyfin restart
+      - ./dist:/config/plugins/Shuffle
+      # Mount a local media folder if you have one; otherwise create dummy files
+      - /Users/deppa/workspace-personale/Jellyfin-Roulette/media:/media:ro
+    restart: unless-stopped

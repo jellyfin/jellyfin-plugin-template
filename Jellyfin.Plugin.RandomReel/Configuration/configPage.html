@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Random Reel</title>
+</head>
+<body>
+    <div id="RandomReelConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="RandomReelConfigForm">
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="PlaybackDurationMinutes">Playback Duration (minutes)</label>
+                        <input id="PlaybackDurationMinutes" name="PlaybackDurationMinutes" type="number" is="emby-input" min="1" max="120" />
+                        <div class="fieldDescription">How many minutes each randomly selected clip will play. Default: 10.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="EdgeExclusionMinutes">Edge Exclusion (minutes)</label>
+                        <input id="EdgeExclusionMinutes" name="EdgeExclusionMinutes" type="number" is="emby-input" min="0" max="60" />
+                        <div class="fieldDescription">Minutes to skip at the start and end of each video when choosing the random start position. Default: 5.</div>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="AllowRepeatsInSession" name="AllowRepeatsInSession" type="checkbox" is="emby-checkbox" />
+                            <span>Allow repeats within the same session</span>
+                        </label>
+                        <div class="fieldDescription">If unchecked, each video will be played at most once before the pool is exhausted and resets.</div>
+                    </div>
+
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div style="margin-top:2em; padding:1em; background:var(--color-paper,#1c1c1c); border-radius:4px;">
+                    <h2 style="font-size:1em; margin-bottom:.5em;">API Usage</h2>
+                    <p style="font-size:.85em; opacity:.7; margin:0;">
+                        <code>GET /Random Reel/Next?folderId={id}&amp;sessionId={session}</code><br>
+                        Returns the next item to play with <code>itemId</code>, <code>startPositionTicks</code>, and <code>playbackDurationTicks</code>.<br><br>
+                        <code>POST /Random Reel/Session/Reset?folderId={id}&amp;sessionId={session}</code><br>
+                        Clears the played-items history for the session.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var RandomReelConfig = {
+                pluginUniqueId: 'a3a23ce9-cf03-4772-b49a-170913d6139a'
+            };
+
+            document.querySelector('#RandomReelConfigPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(RandomReelConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#PlaybackDurationMinutes').value = config.PlaybackDurationMinutes;
+                        document.querySelector('#EdgeExclusionMinutes').value = config.EdgeExclusionMinutes;
+                        document.querySelector('#AllowRepeatsInSession').checked = config.AllowRepeatsInSession;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#RandomReelConfigForm')
+                .addEventListener('submit', function (e) {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(RandomReelConfig.pluginUniqueId).then(function (config) {
+                        config.PlaybackDurationMinutes = parseInt(document.querySelector('#PlaybackDurationMinutes').value, 10);
+                        config.EdgeExclusionMinutes = parseInt(document.querySelector('#EdgeExclusionMinutes').value, 10);
+                        config.AllowRepeatsInSession = document.querySelector('#AllowRepeatsInSession').checked;
+                        ApiClient.updatePluginConfiguration(RandomReelConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                    e.preventDefault();
+                    return false;
+                });
+        </script>
+    </div>
+</body>
+</html>
