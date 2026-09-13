@@ -7,7 +7,7 @@ on:
 
 jobs:
   call:
-    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/command-rebase.yaml@master
+    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/command-rebase.yaml@c971ac64507ae87f30632770506c204b55b13ff4 # master
     with:
       rebase-head: ${{ github.event.client_payload.pull_request.head.label }}
       repository-full-name: ${{ github.event.client_payload.github.payload.repository.full_name }}
