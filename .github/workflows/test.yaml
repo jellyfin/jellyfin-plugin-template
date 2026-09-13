@@ -15,4 +15,4 @@ on:
 
 jobs:
   call:
-    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/test.yaml@master
+    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/test.yaml@c971ac64507ae87f30632770506c204b55b13ff4 # master
