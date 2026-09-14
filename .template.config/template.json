@@ -33,8 +33,10 @@
             "source": "./",
             "target": "./",
             "exclude": [
+                ".git/**",
                 "**/[Bb]in/**",
                 "**/[Oo]bj/**",
+                "artifacts/**",
                 ".template.config/**/*",
                 "**/*.filelist",
                 "**/*.user",
@@ -49,7 +51,6 @@
                     "condition": "(!include-extras)",
                     "exclude": [
                         ".github/**",
-                        ".git/**",
                         ".editorconfig",
                         ".gitignore",
                         ".vscode/**"
