@@ -21,6 +21,6 @@ pipx install jprm
 jrpm plugin build
 ```
 
-You also need the `dotnet` command-line tool installed, along with the appropriate .net framework version.
+You also need the `dotnet` command-line tool installed, along with the appropriate .NET SDK version.
 
 Plugin GUID: `eb5d7894-8eef-4b36-aa6f-5d124e828ce1`
