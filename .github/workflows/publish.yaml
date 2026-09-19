@@ -12,6 +12,8 @@ jobs:
     with:
       version: ${{ github.event.release.tag_name }}
       is-unstable: ${{ github.event.release.prerelease }}
+      dotnet-version: 9.0.x
+      dotnet-target: net9.0
     secrets:
       deploy-host: ${{ secrets.DEPLOY_HOST }}
       deploy-user: ${{ secrets.DEPLOY_USER }}
