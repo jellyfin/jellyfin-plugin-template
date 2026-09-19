@@ -1,0 +1,67 @@
+{
+    "$schema": "https://json.schemastore.org/template",
+    "author": "Jellyfin Team",
+    "classifications": [
+        "NetStandard",
+        "Plugin",
+        "Jellyfin"
+    ],
+    "tags": {
+        "language": "C#",
+        "type": "project"
+    },
+    "identity": "Jellyfin.Plugin",
+    "name": "Jellyfin Plugin Template",
+    "shortName": "jellyfin-plugin",
+    "sourceName": "Jellyfin.Plugin.Template",
+    "symbols": {
+        "PluginGuid": {
+            "type": "generated",
+            "generator": "guid",
+            "replaces": "eb5d7894-8eef-4b36-aa6f-5d124e828ce1",
+            "defaultFormat": "D"
+        },
+        "include-extras": {
+            "type": "parameter",
+            "datatype": "bool",
+            "description": "Include extras such as editorconfig, .gitignore and GitHub Workflows",
+            "defaultValue": "false"
+        }
+    },
+    "sources": [
+        {
+            "source": "./",
+            "target": "./",
+            "exclude": [
+                ".git/**",
+                "**/[Bb]in/**",
+                "**/[Oo]bj/**",
+                "artifacts/**",
+                ".template.config/**/*",
+                "**/*.filelist",
+                "**/*.user",
+                "**/*.lock.json",
+                "README.md"
+            ],
+            "rename": {
+                "TemplatedReadme.md": "README.md"
+            },
+            "modifiers": [
+                {
+                    "condition": "(!include-extras)",
+                    "exclude": [
+                        ".github/**",
+                        ".editorconfig",
+                        ".gitignore",
+                        ".vscode/**"
+                    ]
+                }
+            ]
+        }
+    ],
+    "primaryOutputs": [
+        {
+            "path": "Plugin.cs"
+        }
+    ]
+}
